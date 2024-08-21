@@ -17,7 +17,7 @@ export const PageHome = () => {
   return (
     <>
       <div>
-        <Header handleUpdateStateModal={handleUpdateStateModal} login={true}></Header>
+        <Header handleUpdateStateModal={handleUpdateStateModal} ViewLogin={true}></Header>
         {showModal && <ModalLogin closeModal={closeModal} />}
         <div className="max-w-md mx-auto my-20 p-4 bg-white shadow-md rounded-md">
           <h1 className="text-2xl font-bold mb-4">Asistencia de Empleados</h1>

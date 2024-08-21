@@ -3,7 +3,7 @@ const data = [
     workers: [
       {
         id: 1,
-        cedula: 27451268,
+        cedula: "27451286",
         nombre_completo: "John Doe",
         departamento: "Ventas",
         cargo: "Gerente",

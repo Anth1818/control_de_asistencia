@@ -9,19 +9,22 @@ import TablePagination from "@mui/material/TablePagination";
 import TableRow from "@mui/material/TableRow";
 import { useState } from "react";
 import { useEffect } from "react";
-import { Button, Collapse, IconButton, Typography } from "@mui/material";
+import { Collapse, IconButton, Typography } from "@mui/material";
 import InfoIcon from "@mui/icons-material/Info";
 import React from "react";
 import { Box, Stack } from "@mui/system";
 import { filter } from "lodash";
-import { Link } from "react-router-dom";
+// import { Link } from "react-router-dom";
 import UserListToolbar from "./UserListToolbar";
 import PropTypes from "prop-types";
 import DateRangeCalendarValue from "./DateRangeCalenderValue";
+// import SelectDateSearch from "./SelectDateSearch";
+import Button from "./Button";
 
 const columns = [
   { id: "details_user", label: "Detalles", align: "center" },
   { id: "cedula", label: "Cédula", minWidth: 170, align: "center" },
+  { id: "departamento", label: "Departamento", minWidth: 170, align: "center" },  
   {
     id: "nombre_completo",
     label: "Nombre y Apellido",
@@ -34,18 +37,24 @@ const columns = [
     minWidth: 170,
     align: "center",
   },
+  // {
+  //   id: "hora_entrada",
+  //   label: "Hora de entrada",
+  //   minWidth: 170,
+  //   align: "center",
+  // },
+  // {
+  //   id: "hora_salida",
+  //   label: "Hora de salida",
+  //   minWidth: 170,
+  //   align: "center",
+  // },
   {
-    id: "hora_entrada",
-    label: "Hora de entrada",
+    id: "exportar",
+    label: "Exportar",
     minWidth: 170,
     align: "center",
-  },
-  {
-    id: "hora_salida",
-    label: "Hora de salida",
-    minWidth: 170,
-    align: "center",
-  },
+  }
 ];
 
 function descendingComparator(a, b, orderBy) {
@@ -65,18 +74,29 @@ function getComparator(order, orderBy) {
 }
 
 export function TableWorkers({ data, title, date }) {
+
+  const [users, setUsers] = useState([]);
+
+  // ----------Rango de fecha
   const [fecha_start, setFecha_start] = useState("");
   const [fecha_end, setFecha_end] = useState("");
+
+  // ----------Paginación y filtro por cédula
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [users, setUsers] = useState([]);
   const [openRows, setOpenRows] = useState({});
-  const [filterName, setFilterName] = useState("");
+  const [filterId, setFilterId] = useState("");
   const [orderBy, setOrderBy] = useState("name");
   const [order, setOrder] = useState("asc");
 
-  const fecha_actual = new Date().toLocaleDateString();
 
+  // -------Departamentos
+  const [deparment, setDeparment] = useState('');
+  const handleChangeDepartment = (event) => {
+    setDeparment(event.target.value);
+  };
+
+  const fecha_actual = new Date().toLocaleDateString();
   const [fecha, setFecha] = useState(fecha_actual);
 
   function applySortFilter(array, comparator, query) {
@@ -95,9 +115,9 @@ export function TableWorkers({ data, title, date }) {
     return stabilizedThis?.map((el) => el[0]);
   }
 
-  const handleFilterByName = (event) => {
+  const handleFilterById = (event) => {
     setPage(0);
-    setFilterName(event.target.value);
+    setFilterId(event.target.value);
   };
 
   const handleChangePage = (event, newPage) => {
@@ -123,11 +143,12 @@ export function TableWorkers({ data, title, date }) {
   const filteredUsers = applySortFilter(
     data,
     getComparator(order, orderBy),
-    filterName
+    filterId
   );
-  const isNotFound = !filteredUsers?.length && !!filterName;
+  const isNotFound = !filteredUsers?.length && !!filterId;
 
   // const filteredUsersReverse = [...filteredUsers].reverse();
+  console.log(filterId)
 
   return (
     <Box
@@ -139,10 +160,10 @@ export function TableWorkers({ data, title, date }) {
         height: "100vh",
       }}
     >
-      <Paper sx={{ width: "80%", overflow: "hidden" }}>
+      <Paper sx={{ width: "90%", overflow: "hidden" }}>
         <TableContainer sx={{ maxHeight: 600 }}>
           <Stack
-            direction="row"
+            direction="column"
             flexWrap={"wrap"}
             justifyContent={"space-around"}
             px={3}
@@ -157,19 +178,30 @@ export function TableWorkers({ data, title, date }) {
           </Stack>
 
           <Stack
-            direction="row"
+            direction="column"
             flexWrap={"wrap"}
-            justifyContent={"space-around"}
-            px={3}
+            justifyContent={"center"}
+
           >
+            <label className="ml-6"><b>Buscar por:</b> </label>
             <UserListToolbar
               // numSelected={selected.length}
-              filterName={filterName}
-              onFilterName={handleFilterByName}
+              filterId={filterId}
+              onFilterId={handleFilterById}
               searchLabel="Buscar por cédula"
+              deparment={deparment}
+              onDeparment={handleChangeDepartment}
             />
+
+            <label className="ml-6 mt-2"><b>Rango de fecha:</b> </label>
             <DateRangeCalendarValue />
+            {/* <SelectDateSearch /> */}
           </Stack>
+          <div className="w-[95%] mx-[2.5%] flex justify-center content-center mb-2 gap-2 flex-wrap">
+            <Button halfWidth>Aplicar Filtros</Button>
+            <Button >Exportar a pdf</Button>
+            <Button >Exportar a excel</Button>
+          </div>
 
           <Table stickyHeader aria-label="sticky table">
             <TableHead>
@@ -218,6 +250,13 @@ export function TableWorkers({ data, title, date }) {
                               </IconButton>
                             </TableCell>
                           );
+                        } else if (column.id === "exportar") {
+                          return (
+                            <TableCell key={column.id} align="center" sx={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                              <Button >Exportar a pdf</Button>
+                              <Button >Exportar a excel</Button>
+                            </TableCell>
+                          );
                         } else {
                           const value = row[column.id];
                           return (
@@ -261,16 +300,16 @@ export function TableWorkers({ data, title, date }) {
                               }}
                             >
                               <div>
-                                <b>Telefono:</b>{" "}
-                                {row.telefono === ""
+                                <b>Hora de entrada:</b>{" "}
+                                {row.hora_entrada === ""
                                   ? "Sin datos"
-                                  : row.telefono}
+                                  : row.hora_entrada}
                               </div>
                               <div>
-                                <b>Correo:</b>{" "}
-                                {row.correo === "" ? "Sin datos" : row.correo}
+                                <b>Hora de salida:</b>{" "}
+                                {row.hora_salida === "" ? "Sin datos" : row.hora_salida}
                               </div>
-                              <div>
+                              {/* <div>
                                 <b>Genero:</b>{" "}
                                 {row.genero === "" ? "Sin datos" : row.genero}
                               </div>
@@ -283,7 +322,7 @@ export function TableWorkers({ data, title, date }) {
                               <div>
                                 <b>Estatus:</b>{" "}
                                 {row.estatus ? "Activo " : "Inactivo"}
-                              </div>
+                              </div> */}
                             </Box>
                           </Box>
                         </Collapse>
@@ -295,7 +334,7 @@ export function TableWorkers({ data, title, date }) {
             {isNotFound && (
               <TableBody>
                 <TableRow>
-                  <TableCell align="center" colSpan={6} sx={{ py: 3 }}>
+                  <TableCell align="center" colSpan={columns.length} sx={{ py: 3 }}>
                     <Paper
                       sx={{
                         textAlign: "center",
@@ -307,7 +346,7 @@ export function TableWorkers({ data, title, date }) {
 
                       <Typography variant="body2">
                         No hay resultados para &nbsp;
-                        <strong>&quot;{filterName}&quot;</strong>.
+                        <strong>&quot;{filterId}&quot;</strong>.
                       </Typography>
                     </Paper>
                   </TableCell>
@@ -333,4 +372,5 @@ export function TableWorkers({ data, title, date }) {
 TableWorkers.propTypes = {
   data: PropTypes.array,
   title: PropTypes.string,
+  date: PropTypes.string,
 };

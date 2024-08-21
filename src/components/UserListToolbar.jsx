@@ -1,55 +1,51 @@
 import PropTypes from "prop-types";
 // @mui
-import { styled, alpha } from "@mui/material/styles";
+import { styled} from "@mui/material/styles";
 import {
   Toolbar,
-  Tooltip,
-  IconButton,
   Typography,
   OutlinedInput,
   InputAdornment,
 } from "@mui/material";
-// component
+// components
 import Iconify from "./Iconify";
+import SelectDeparment from "./SelectDeparments";
 
 // ----------------------------------------------------------------------
 
 const StyledRoot = styled(Toolbar)(({ theme }) => ({
-  height: 96,
+  height: 60,
   display: "flex",
   justifyContent: "space-between",
   padding: theme.spacing(0, 1, 0, 3),
 }));
 
 const StyledSearch = styled(OutlinedInput)(({ theme }) => ({
-  width: 240,
+  width: "49.5%",
   transition: theme.transitions.create(["box-shadow", "width"], {
     easing: theme.transitions.easing.easeInOut,
     duration: theme.transitions.duration.shorter,
-  }),
-  "&.Mui-focused": {
-    width: 320,
-  },
-  "& fieldset": {
-    borderWidth: `1px !important`,
-    borderColor: `${alpha(theme.palette.grey[500], 0.32)} !important`,
-  },
+  })
 }));
 
 // ----------------------------------------------------------------------
 
 UserListToolbar.propTypes = {
   numSelected: PropTypes.number,
-  filterName: PropTypes.string,
-  onFilterName: PropTypes.func,
+  filterId: PropTypes.string,
+  onFilterId: PropTypes.func,
   searchLabel: PropTypes.string,
+  deparment: PropTypes.string,
+  onDeparment: PropTypes.func,
 };
 
 export default function UserListToolbar({
   numSelected,
-  filterName,
-  onFilterName,
+  filterId,
+  onFilterId,
   searchLabel,
+  deparment,
+  onDeparment,
 }) {
   return (
     <StyledRoot
@@ -66,9 +62,10 @@ export default function UserListToolbar({
         </Typography>
       ) : (
         <StyledSearch
-          value={filterName}
+          disabled={deparment ? true : false}
+          value={filterId}
           name="filter"
-          onChange={onFilterName}
+          onChange={onFilterId}
           placeholder={searchLabel}
           startAdornment={
             <InputAdornment position="start">
@@ -80,20 +77,7 @@ export default function UserListToolbar({
           }
         />
       )}
-
-      {/* {numSelected > 0 ? (
-        <Tooltip title="Eliminar">
-          <IconButton>
-            <Iconify icon="eva:trash-2-fill" />
-          </IconButton>
-        </Tooltip>
-      ) : (
-        <Tooltip title="Filtros">
-          <IconButton>
-            <Iconify icon="ic:round-filter-list" />
-          </IconButton>
-        </Tooltip>
-      )} */}
+      <SelectDeparment filterId={filterId} deparment={deparment} handleChangeDeparment={onDeparment} />
     </StyledRoot>
   );
 }
