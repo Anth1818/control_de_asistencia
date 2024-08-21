@@ -23,16 +23,16 @@ import Button from "./Button";
 
 const columns = [
   { id: "details_user", label: "Detalles", align: "center" },
-  { id: "cedula", label: "Cédula", minWidth: 170, align: "center" },
-  { id: "departamento", label: "Departamento", minWidth: 170, align: "center" },  
+  { id: "identity_card", label: "Cédula", minWidth: 170, align: "center" },
+  { id: "department", label: "Departamento", minWidth: 170, align: "center" },
   {
-    id: "nombre_completo",
+    id: "full_name",
     label: "Nombre y Apellido",
     minWidth: 100,
     align: "center",
   },
   {
-    id: "fecha",
+    id: "date_attendance",
     label: "Fecha",
     minWidth: 170,
     align: "center",
@@ -49,12 +49,12 @@ const columns = [
   //   minWidth: 170,
   //   align: "center",
   // },
-  {
-    id: "exportar",
-    label: "Exportar",
-    minWidth: 170,
-    align: "center",
-  }
+  // {
+  //   id: "exportar",
+  //   label: "Exportar",
+  //   minWidth: 170,
+  //   align: "center",
+  // },
 ];
 
 function descendingComparator(a, b, orderBy) {
@@ -74,8 +74,13 @@ function getComparator(order, orderBy) {
 }
 
 export function TableWorkers({ data, title, date }) {
-
   const [users, setUsers] = useState([]);
+
+  useEffect(() => {
+    setUsers(data);
+  }, []);
+
+
 
   // ----------Rango de fecha
   const [fecha_start, setFecha_start] = useState("");
@@ -89,9 +94,8 @@ export function TableWorkers({ data, title, date }) {
   const [orderBy, setOrderBy] = useState("name");
   const [order, setOrder] = useState("asc");
 
-
   // -------Departamentos
-  const [deparment, setDeparment] = useState('');
+  const [deparment, setDeparment] = useState("");
   const handleChangeDepartment = (event) => {
     setDeparment(event.target.value);
   };
@@ -99,7 +103,7 @@ export function TableWorkers({ data, title, date }) {
   const fecha_actual = new Date().toLocaleDateString();
   const [fecha, setFecha] = useState(fecha_actual);
 
-  function applySortFilter(array, comparator, query) {
+  function applySortFilter(array, comparator, query, ) {
     const stabilizedThis = array?.map((el, index) => [el, index]);
     stabilizedThis?.sort((a, b) => {
       const order = comparator(a[0], b[0]);
@@ -129,10 +133,6 @@ export function TableWorkers({ data, title, date }) {
     setPage(0);
   };
 
-  useEffect(() => {
-    setUsers(data.workers);
-  }, [data]);
-
   const toggleRowDetails = (userId) => {
     setOpenRows((prevOpenRows) => ({
       ...prevOpenRows,
@@ -143,12 +143,13 @@ export function TableWorkers({ data, title, date }) {
   const filteredUsers = applySortFilter(
     data,
     getComparator(order, orderBy),
-    filterId
+    filterId,
+    deparment
   );
   const isNotFound = !filteredUsers?.length && !!filterId;
 
   // const filteredUsersReverse = [...filteredUsers].reverse();
-  console.log(filterId)
+  // console.log(filterId)
 
   return (
     <Box
@@ -177,13 +178,10 @@ export function TableWorkers({ data, title, date }) {
             </Typography>
           </Stack>
 
-          <Stack
-            direction="column"
-            flexWrap={"wrap"}
-            justifyContent={"center"}
-
-          >
-            <label className="ml-6"><b>Buscar por:</b> </label>
+          <Stack direction="column" flexWrap={"wrap"} justifyContent={"center"}>
+            <label className="ml-6">
+              <b>Buscar por:</b>{" "}
+            </label>
             <UserListToolbar
               // numSelected={selected.length}
               filterId={filterId}
@@ -193,14 +191,16 @@ export function TableWorkers({ data, title, date }) {
               onDeparment={handleChangeDepartment}
             />
 
-            <label className="ml-6 mt-2"><b>Rango de fecha:</b> </label>
+            <label className="ml-6 mt-2">
+              <b>Rango de fecha:</b>{" "}
+            </label>
             <DateRangeCalendarValue />
             {/* <SelectDateSearch /> */}
           </Stack>
           <div className="w-[95%] mx-[2.5%] flex justify-center content-center mb-2 gap-2 flex-wrap">
             <Button halfWidth>Aplicar Filtros</Button>
-            <Button >Exportar a pdf</Button>
-            <Button >Exportar a excel</Button>
+            <Button>Exportar a pdf</Button>
+            <Button>Exportar a excel</Button>
           </div>
 
           <Table stickyHeader aria-label="sticky table">
@@ -229,7 +229,7 @@ export function TableWorkers({ data, title, date }) {
               {filteredUsers
                 ?.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                 .map((row, index) => (
-                  <React.Fragment key={row.cedula}>
+                  <React.Fragment key={row.identity_card}>
                     <TableRow
                       hover
                       tabIndex={-1}
@@ -250,13 +250,14 @@ export function TableWorkers({ data, title, date }) {
                               </IconButton>
                             </TableCell>
                           );
-                        } else if (column.id === "exportar") {
-                          return (
-                            <TableCell key={column.id} align="center" sx={{ display: "flex", flexDirection: "column", gap: "2px" }}>
-                              <Button >Exportar a pdf</Button>
-                              <Button >Exportar a excel</Button>
-                            </TableCell>
-                          );
+                          // } else if (column.id === "exportar") {
+                          //   return (
+                          //     <TableCell key={column.id} align="center" sx={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                          //       <Button >Exportar a pdf</Button>
+                          //       <Button >Exportar a excel</Button>
+                          //     </TableCell>
+                          //   );
+                          // }
                         } else {
                           const value = row[column.id];
                           return (
@@ -301,13 +302,15 @@ export function TableWorkers({ data, title, date }) {
                             >
                               <div>
                                 <b>Hora de entrada:</b>{" "}
-                                {row.hora_entrada === ""
+                                {row.check_in === ""
                                   ? "Sin datos"
-                                  : row.hora_entrada}
+                                  : row.check_in}
                               </div>
                               <div>
                                 <b>Hora de salida:</b>{" "}
-                                {row.hora_salida === "" ? "Sin datos" : row.hora_salida}
+                                {row.check_out === ""
+                                  ? "Sin datos"
+                                  : row.check_out}
                               </div>
                               {/* <div>
                                 <b>Genero:</b>{" "}
@@ -334,7 +337,11 @@ export function TableWorkers({ data, title, date }) {
             {isNotFound && (
               <TableBody>
                 <TableRow>
-                  <TableCell align="center" colSpan={columns.length} sx={{ py: 3 }}>
+                  <TableCell
+                    align="center"
+                    colSpan={columns.length}
+                    sx={{ py: 3 }}
+                  >
                     <Paper
                       sx={{
                         textAlign: "center",
