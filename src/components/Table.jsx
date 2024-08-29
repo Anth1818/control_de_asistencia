@@ -165,7 +165,7 @@ export function TableWorkers({ data, title, date }) {
     if (applyFilter) {
       const data = { date_start, date_end, department, ic: toNumber(filterId) };
       console.log(data);
-      fetch(`http://localhost:3000/attendance/filter/pag/${page + 1}/lim/${rowsPerPage}`, {
+      fetch(`http://172.30.40.23:3000/attendance/filter/pag/${page + 1}/lim/${rowsPerPage}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -260,7 +260,6 @@ export function TableWorkers({ data, title, date }) {
           </form>
           <div className="w-full flex justify-center gap-2 mb-2 flex-wrap">
             <Button event={() => { handleExportPDF(date_start, date_end, departmentSelected, filterId, filteredAttendance, date) }} >Exportar a pdf</Button>
-            <Button>Exportar a excel</Button>
             <Button event={handleClearFilters}>Limpiar filtros</Button>
           </div>
 

@@ -7,13 +7,13 @@ import {date} from "../utils/date";
 
 export const PageTrabajadores = () => {
 
-  // const api = "http://172.30.40.23:3000/attendance";
-  const localApi = "http://localhost:3000/attendance"
+  const api = "http://172.30.40.23:3000/attendance";
+  // const localApi = "http://localhost:3000/attendance"
 
   const [data, setData] = useState([]);
   
   useEffect(() => {
-    fetch(localApi)
+    fetch(api)
       .then((response) => response.json())
       .then((data) => setData(data))
       .catch((error) => console.error(error));

@@ -1,45 +1,112 @@
 import { jsPDF } from "jspdf";
+import inamujerLogo from "../../public/inamujer-logo.png";
+import cintilloInamujer from "../../public/cintillo_ministerio.png";
+import autoTable from 'jspdf-autotable';
 
-function handleExportPDF(date_start, date_end, departmentSelected, filterId, filteredAttendance, date) {
-    const doc = new jsPDF();
-    let heading = "";
-if (filterId) {
-  if (date_start === "" && date_end === "") {
-    heading = `Reporte de asistencia del trabajador con cédula ${filterId}`;
-  } else {
-    heading = `Reporte de asistencia del trabajador con cédula ${filterId} del ${date_start} al\n ${date_end}`;
-  }
-} else {
-  heading = `Reporte de asistencia generado el ${date} en el rango de fecha ${date_start === "" ? "--/--/----" : date_start} al ${date_end === "" ? "--/--/----" : date_end} en el departamento: ${departmentSelected?.name === undefined ? "'Todos los departamentos'" : departmentSelected?.name}`;
+function toBase64(url) {
+  return new Promise((resolve, reject) => {
+    let image = new Image();
+    image.onload = function () {
+      let canvas = document.createElement("canvas");
+      canvas.width = this.naturalWidth;
+      canvas.height = this.naturalHeight;
+      canvas.getContext("2d").drawImage(this, 0, 0);
+      resolve(canvas.toDataURL("image/png").split(",")[1]);
+    };
+    image.src = url;
+  });
 }
 
-doc.setFontSize(16);
-const pageWidth = doc.internal.pageSize.getWidth();
-const pageHeight = doc.internal.pageSize.getHeight();
-const maxWidthHeading = pageWidth - 20; // Maximum width for the text (with some padding)
+const inamujerLogoBase64 = await toBase64(inamujerLogo);
+const cintilloInamujerBase64 = await toBase64(cintilloInamujer);
 
-// Use the maxWidth option to ensure the text wraps if it doesn't fit in the specified width
-doc.text(heading, 10, 10, { maxWidth: maxWidthHeading });
+function handleExportPDF(
+  date_start,
+  date_end,
+  departmentSelected,
+  filterId,
+  filteredAttendance,
+  date
+) {
+  const doc = new jsPDF();
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const maxWidthHeading = pageWidth - 20; // Maximum width for the text (with some padding)
+  const title = "Reporte de asistencia";
+  const generateReport = `Generado el: ${date}`;
+  const dateRange = `En rango de fecha ${date_start ? date_start : "No especificado"} al ${date_end ? date_end : "No especificado"}`;
+  const department = `Departamento: ${departmentSelected?.name ? departmentSelected?.name : "Todos los departamentos"}`;
+  const filter = `Cédula: ${filterId ? filterId : "No especificado"}`;
 
-    doc.setFontSize(10);
-    // Add filtered attendance data
-    let startY = 30;
-    const gap = 15;
-    const maxWidth = pageWidth - 20// Starting Y position for the attendance data
-    filteredAttendance.forEach((record, index) => {
-      const recordText = `${index + 1}. Cédula: ${record.identity_card} - Nombre Completo: ${record.full_name} - Fecha: ${record.date_attendance_string} - Hora de entrada: ${record.check_in_string} - Hora de salida: ${record.check_out_string} - Departamento: ${record.department}`;
-      
-      // Check if the current Y position exceeds the page height
-      if (startY + gap > pageHeight) {
-        doc.addPage();
-        startY = 10; // Reset Y position for the new page
-      }
+  doc.setFontSize(20);
+  doc.setFont("helvetica", "bold");
   
-      doc.text(recordText, 10, startY, { maxWidth });
-      startY += gap; // Increment Y position for the next record
-    });
-  
-    doc.save(`Reporte_de_asistencia.pdf`);
-  }
+  doc.text(title, 20, 35, { maxWidth: maxWidthHeading });
+  // let heading = "";
+  // if (filterId) {
+  //   if (date_start === "" && date_end === "") {
+  //     heading = `Reporte de asistencia del trabajador con cédula ${filterId}`;
+  //   } else {
+  //     heading = `Reporte de asistencia del trabajador con cédula ${filterId} del ${date_start} al\n ${date_end}`;
+  //   }
+  // } else {
+  //   heading = `Reporte de asistencia generado el ${date} en el rango de fecha ${
+  //     date_start === "" ? "--/--/----" : date_start
+  //   } al ${date_end === "" ? "--/--/----" : date_end} en el departamento: ${
+  //     departmentSelected?.name === undefined
+  //       ? "'Todos los departamentos'"
+  //       : departmentSelected?.name
+  //   }`;
+  // }
+  doc.addImage(cintilloInamujerBase64, "PNG", 0, 0, 210, 25);
+  doc.addImage(inamujerLogoBase64, "PNG", 0, 25, 20, 20);
 
-  export default handleExportPDF;
+  doc.setFontSize(14);
+  doc.setFont("helvetica", "normal");
+
+
+  // Use the maxWidth option to ensure the text wraps if it doesn't fit in the specified width
+  doc.text(generateReport, 20, 45, { maxWidth: maxWidthHeading });
+  doc.text(dateRange, 20, 55, { maxWidth: maxWidthHeading });
+  doc.text(department, 20, 65, { maxWidth: maxWidthHeading });
+  doc.text(filter, 20, 75, { maxWidth: maxWidthHeading });
+
+  // Define the columns
+  const columns = [
+    "#",
+    "Cédula",
+    "Nombre Completo",
+    "Fecha",
+    "Hora de entrada",
+    "Hora de salida",
+    "Departamento",
+  ];
+
+  // Prepare the data
+  const data = filteredAttendance.map((record, index) => [
+    index + 1,
+    record.identity_card,
+    record.full_name,
+    record.date_attendance_string,
+    record.check_in_string,
+    record.check_out_string,
+    record.department,
+  ]);
+
+  // Add the table to the PDF
+  doc.autoTable({
+    head: [columns],
+    body: data,
+    startY: 85,
+    styles: { fontSize: 10 },
+  });
+
+  const blob = new Blob([doc.output("blob")], { type: "application/pdf" });
+
+  // Create a URL from the blob
+  const url = URL.createObjectURL(blob);
+
+  // Open the URL in a new tab
+  window.open(url, "_blank");
+}
+
+export default handleExportPDF;

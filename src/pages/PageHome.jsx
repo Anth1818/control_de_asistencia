@@ -42,7 +42,7 @@ export const PageHome = () => {
   useEffect(() => {
     if (searchWorkerBtn || checkInBtn || checkOutBtn) {
       setLoader(true);
-      fetch(`http://localhost:3000/attendance/${workerIdentity}`, {
+      fetch(`http://172.30.40.23:3000/attendance/${workerIdentity}`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -62,13 +62,13 @@ export const PageHome = () => {
 
       });
     }
-  }, [searchWorkerBtn, checkInBtn, checkOutBtn]);
+  }, [searchWorkerBtn]);
 
   // ------Marcar hora de entrada en la base de datos
   useEffect(() => {
     if (!checkInBtn) return;
     if (worker.check_in) return;
-    fetch("http://localhost:3000/attendance", {
+    fetch("http://172.30.40.23:3000/attendance", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -78,7 +78,7 @@ export const PageHome = () => {
       if (response.ok) {
         response.json().then((data) => {
           setCheckInSuccess(true);
-          setWorker({ ...worker, date_attendance_string: date, check_in_string: hour, check_out_string: null })
+          setWorker({ ...worker, date_attendance_string: date, date_attendance: date ,check_in_string: data.data.check_in_string, check_out_string: null })
           console.log(data);
         });
       }
@@ -94,7 +94,7 @@ export const PageHome = () => {
   useEffect(() => {
     if (!checkOutBtn) return;
     if (worker.check_out) return;
-    fetch("http://localhost:3000/attendance", {
+    fetch("http://172.30.40.23:3000/attendance", {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
@@ -104,7 +104,7 @@ export const PageHome = () => {
       if (response.ok) {
         response.json().then((data) => {
           setCheckOutSuccess(true);
-          setWorker({ ...worker, check_out_string: hour })
+          setWorker({ ...worker, check_out_string: data.data.check_out_string })
           console.log(data);
         });
       }
@@ -141,7 +141,7 @@ export const PageHome = () => {
         <Header handleUpdateStateModal={handleUpdateStateModal} ViewLogin={true}></Header>
         {showModal && <ModalLogin closeModal={closeModal} />}
         <div className="max-w-md mx-auto my-20 p-4 bg-white shadow-md rounded-md">
-          <h1 className="text-2xl font-bold mb-4">Asistencia de Empleados</h1>
+          <h1 className="text-2xl font-bold mb-4">Control de asistencia</h1>
           <div className="mb-4">
             <form className="flex items-center" onSubmit={handleSearchWorker}>
               <input

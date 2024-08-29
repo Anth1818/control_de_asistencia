@@ -6,4 +6,5 @@ const date = new Date().toLocaleDateString('en-GB', {
 
 const hour = new Date().getHours() + ':' + new Date().getMinutes();
 
+console.log(hour)
 export {date, hour};
