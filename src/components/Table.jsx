@@ -1,4 +1,5 @@
 // import * as React from "react";
+import { Box, Collapse, IconButton, Typography } from "@mui/material";
 import Paper from "@mui/material/Paper";
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
@@ -9,20 +10,21 @@ import TablePagination from "@mui/material/TablePagination";
 import TableRow from "@mui/material/TableRow";
 import { useState } from "react";
 import { useEffect } from "react";
-import { Collapse, IconButton, Typography } from "@mui/material";
 import InfoIcon from "@mui/icons-material/Info";
 import React from "react";
-import { Box, Stack } from "@mui/system";
-import { filter } from "lodash";
+import { Stack } from "@mui/system";
+import { filter, toNumber } from "lodash";
 // import { Link } from "react-router-dom";
 import UserListToolbar from "./UserListToolbar";
 import PropTypes from "prop-types";
 import DateRangeCalendarValue from "./DateRangeCalenderValue";
 // import SelectDateSearch from "./SelectDateSearch";
 import Button from "./Button";
+import handleExportPDF  from "../utils/exportPDF.js";
+import departments from "../utils/departments";
 
 const columns = [
-  { id: "details_user", label: "Detalles", align: "center" },
+  { id: "details_user", label: "Detalles", align: "center", minWidth: 120, },
   { id: "identity_card", label: "Cédula", minWidth: 170, align: "center" },
   { id: "department", label: "Departamento", minWidth: 170, align: "center" },
   {
@@ -32,7 +34,7 @@ const columns = [
     align: "center",
   },
   {
-    id: "date_attendance",
+    id: "date_attendance_string",
     label: "Fecha",
     minWidth: 170,
     align: "center",
@@ -73,37 +75,41 @@ function getComparator(order, orderBy) {
     : (a, b) => -descendingComparator(a, b, orderBy);
 }
 
-export function TableWorkers({ data, title, date }) {
-  const [users, setUsers] = useState([]);
 
+export function TableWorkers({ data, title, date }) {
+  const [attendance, setAttendance] = useState([]);
+
+  
   useEffect(() => {
-    setUsers(data);
-  }, []);
+    setAttendance(data);
+  }, [data]);
 
 
 
   // ----------Rango de fecha
-  const [fecha_start, setFecha_start] = useState("");
-  const [fecha_end, setFecha_end] = useState("");
+  const [date_start, setDate_start] = useState("");
+  const [date_end, setDate_end] = useState("");
+
+  const [applyFilter, setApplyFilter] = useState(false);
+
 
   // ----------Paginación y filtro por cédula
   const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [rowsPerPage, setRowsPerPage] = useState(250);
   const [openRows, setOpenRows] = useState({});
   const [filterId, setFilterId] = useState("");
   const [orderBy, setOrderBy] = useState("name");
   const [order, setOrder] = useState("asc");
 
   // -------Departamentos
-  const [deparment, setDeparment] = useState("");
+  const [department, setDeparment] = useState(0);
   const handleChangeDepartment = (event) => {
     setDeparment(event.target.value);
   };
 
-  const fecha_actual = new Date().toLocaleDateString();
-  const [fecha, setFecha] = useState(fecha_actual);
+  const departmentSelected = departments.find((dept) => dept.id === department);
 
-  function applySortFilter(array, comparator, query, ) {
+  function applySortFilter(array, comparator, query,) {
     const stabilizedThis = array?.map((el, index) => [el, index]);
     stabilizedThis?.sort((a, b) => {
       const order = comparator(a[0], b[0]);
@@ -113,7 +119,7 @@ export function TableWorkers({ data, title, date }) {
     if (query) {
       return filter(
         stabilizedThis,
-        (_user) => _user[0]?.cedula.toString().indexOf(query) !== -1
+        (_user) => _user[0]?.identity_card.toString().indexOf(query) !== -1
       ).map((el) => el[0]);
     }
     return stabilizedThis?.map((el) => el[0]);
@@ -140,16 +146,62 @@ export function TableWorkers({ data, title, date }) {
     }));
   };
 
-  const filteredUsers = applySortFilter(
-    data,
+  const filteredAttendance = applySortFilter(
+    attendance,
     getComparator(order, orderBy),
     filterId,
-    deparment
   );
-  const isNotFound = !filteredUsers?.length && !!filterId;
+
+  const isNotFound = !filteredAttendance?.length && !!filterId;
+
+  const handleClearFilters = () => {
+    setFilterId("");
+    setDate_start("");
+    setDate_end("");
+    setDeparment(0);
+  }
+
+  useEffect(() => {
+    if (applyFilter) {
+      const data = { date_start, date_end, department, ic: toNumber(filterId) };
+      console.log(data);
+      fetch(`http://localhost:3000/attendance/filter/pag/${page + 1}/lim/${rowsPerPage}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+      })
+        .then(response => {
+          if (!response.ok) {
+            return response.json().then(error => {
+              throw new Error(`Error ${response.status}: ${error.message}`);
+            });
+          }
+          return response.json();
+        })
+        .then(data => {
+          setAttendance(data.data);
+          console.log('Success:', data);
+        })
+        .catch(error => {
+          console.error('Error:', error);
+        }).finally(() => {
+          setApplyFilter(false);
+        });
+    }
+  }, [applyFilter]);
+
+  const handleFetchByFilters = (event) => {
+    event.preventDefault();
+    setApplyFilter(true);
+  };
 
   // const filteredUsersReverse = [...filteredUsers].reverse();
   // console.log(filterId)
+  // console.log(department);
+  // console.log(fecha_start, fecha_end);
+  console.log(filteredAttendance);
 
   return (
     <Box
@@ -178,30 +230,40 @@ export function TableWorkers({ data, title, date }) {
             </Typography>
           </Stack>
 
-          <Stack direction="column" flexWrap={"wrap"} justifyContent={"center"}>
-            <label className="ml-6">
-              <b>Buscar por:</b>{" "}
-            </label>
-            <UserListToolbar
-              // numSelected={selected.length}
-              filterId={filterId}
-              onFilterId={handleFilterById}
-              searchLabel="Buscar por cédula"
-              deparment={deparment}
-              onDeparment={handleChangeDepartment}
-            />
+          <form onSubmit={handleFetchByFilters}>
+            <Stack direction="column" flexWrap={"wrap"} justifyContent={"center"}>
+              <label className="ml-6 mb-9 lg:mb-0">
+                <b>Buscar por:</b>{" "}
+              </label>
+              <UserListToolbar
+                // numSelected={selected.length}
+                filterId={filterId}
+                onFilterId={handleFilterById}
+                searchLabel="Buscar por cédula"
+                department={department}
+                onDeparment={handleChangeDepartment}
+              />
 
-            <label className="ml-6 mt-2">
-              <b>Rango de fecha:</b>{" "}
-            </label>
-            <DateRangeCalendarValue />
-            {/* <SelectDateSearch /> */}
-          </Stack>
-          <div className="w-[95%] mx-[2.5%] flex justify-center content-center mb-2 gap-2 flex-wrap">
-            <Button halfWidth>Aplicar Filtros</Button>
-            <Button>Exportar a pdf</Button>
+              <label className="ml-6 mt-9 lg:mt-2">
+                <b>Rango de fecha:</b>{" "}
+              </label>
+              <DateRangeCalendarValue
+                date_start={date_start}
+                date_end={date_end}
+                setDateStart={setDate_start}
+                setDateEnd={setDate_end} />
+              {/* <SelectDateSearch /> */}
+            </Stack>
+            <div className="w-[95%] mx-[2.5%] flex justify-center content-center mb-2 gap-2 flex-wrap">
+              <Button halfWidth type={"submit"} >Aplicar Filtros</Button>
+            </div>
+          </form>
+          <div className="w-full flex justify-center gap-2 mb-2 flex-wrap">
+            <Button event={() => { handleExportPDF(date_start, date_end, departmentSelected, filterId, filteredAttendance, date) }} >Exportar a pdf</Button>
             <Button>Exportar a excel</Button>
+            <Button event={handleClearFilters}>Limpiar filtros</Button>
           </div>
+
 
           <Table stickyHeader aria-label="sticky table">
             <TableHead>
@@ -226,10 +288,10 @@ export function TableWorkers({ data, title, date }) {
               </TableRow>
             </TableHead>
             <TableBody>
-              {filteredUsers
+              {filteredAttendance
                 ?.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                 .map((row, index) => (
-                  <React.Fragment key={row.identity_card}>
+                  <React.Fragment key={row.id}>
                     <TableRow
                       hover
                       tabIndex={-1}
@@ -304,13 +366,13 @@ export function TableWorkers({ data, title, date }) {
                                 <b>Hora de entrada:</b>{" "}
                                 {row.check_in === ""
                                   ? "Sin datos"
-                                  : row.check_in}
+                                  : row.check_in_string}
                               </div>
                               <div>
                                 <b>Hora de salida:</b>{" "}
                                 {row.check_out === ""
                                   ? "Sin datos"
-                                  : row.check_out}
+                                  : row.check_out_string}
                               </div>
                               {/* <div>
                                 <b>Genero:</b>{" "}
@@ -348,7 +410,7 @@ export function TableWorkers({ data, title, date }) {
                       }}
                     >
                       <Typography variant="h6" paragraph>
-                        No encontrado
+                        {isNotFound && "No encontrado"}
                       </Typography>
 
                       <Typography variant="body2">
@@ -360,13 +422,35 @@ export function TableWorkers({ data, title, date }) {
                 </TableRow>
               </TableBody>
             )}
+            {filteredAttendance?.length === 0 && (
+              <TableBody>
+                <TableRow>
+                  <TableCell
+                    align="center"
+                    colSpan={columns.length}
+                    sx={{ py: 3 }}
+                  >
+                    <Paper
+                      sx={{
+                        textAlign: "center",
+                      }}
+                    >
+                      <Typography variant="h6" paragraph>
+                        {"No hay registros"}
+                      </Typography>
+
+                    </Paper>
+                  </TableCell>
+                </TableRow>
+              </TableBody>
+            )}
           </Table>
         </TableContainer>
         <TablePagination
-          rowsPerPageOptions={[10, 25, 100]}
+          rowsPerPageOptions={[10, 25, 100, 250, 1000]}
           component="div"
           labelRowsPerPage="Filas por página"
-          count={users?.length || 0}
+          count={attendance?.length || 0}
           rowsPerPage={rowsPerPage}
           page={page}
           onPageChange={handleChangePage}

@@ -13,7 +13,7 @@ export const Header = ({handleUpdateStateModal, ViewLogout, ViewLogin, handleLog
             {ViewLogout && <Button event={handleLogout} header={true}>Cerrar Sesión</Button>}
           </div>
         </header>
-        <img src={inamujerLogo} alt="Logo" className="h-20 w-20 absolute" />
+        <img src={inamujerLogo} alt="Logo" className="h-20 w-20 absolute hidden sm:block" />
       </>
     )
 }

@@ -1,6 +1,6 @@
 import PropTypes from "prop-types";
 // @mui
-import { styled} from "@mui/material/styles";
+import { styled } from "@mui/material/styles";
 import {
   Toolbar,
   Typography,
@@ -15,13 +15,10 @@ import SelectDeparment from "./SelectDeparments";
 
 const StyledRoot = styled(Toolbar)(({ theme }) => ({
   height: 60,
-  display: "flex",
-  justifyContent: "space-between",
   padding: theme.spacing(0, 1, 0, 3),
 }));
 
 const StyledSearch = styled(OutlinedInput)(({ theme }) => ({
-  width: "49.5%",
   transition: theme.transitions.create(["box-shadow", "width"], {
     easing: theme.transitions.easing.easeInOut,
     duration: theme.transitions.duration.shorter,
@@ -35,8 +32,9 @@ UserListToolbar.propTypes = {
   filterId: PropTypes.string,
   onFilterId: PropTypes.func,
   searchLabel: PropTypes.string,
-  deparment: PropTypes.string,
+  department: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
   onDeparment: PropTypes.func,
+  
 };
 
 export default function UserListToolbar({
@@ -44,8 +42,9 @@ export default function UserListToolbar({
   filterId,
   onFilterId,
   searchLabel,
-  deparment,
+  department,
   onDeparment,
+  
 }) {
   return (
     <StyledRoot
@@ -61,23 +60,25 @@ export default function UserListToolbar({
           {numSelected} Seleccione
         </Typography>
       ) : (
-        <StyledSearch
-          disabled={deparment ? true : false}
-          value={filterId}
-          name="filter"
-          onChange={onFilterId}
-          placeholder={searchLabel}
-          startAdornment={
-            <InputAdornment position="start">
-              <Iconify
-                icon="eva:search-fill"
-                sx={{ color: "text.disabled", width: 20, height: 20 }}
-              />
-            </InputAdornment>
-          }
-        />
-      )}
-      <SelectDeparment filterId={filterId} deparment={deparment} handleChangeDeparment={onDeparment} />
+        <div className="w-full flex gap-2 flex-wrap">
+          <StyledSearch
+            sx={{width:{xs:"97%", md:"49.5%"}}}
+            // disabled={department ? true : false}
+            value={filterId}
+            name="filter"
+            onChange={onFilterId}
+            placeholder={searchLabel}
+            startAdornment={
+              <InputAdornment position="start">
+                <Iconify
+                  icon="eva:search-fill"
+                  sx={{ color: "text.disabled", width: 20, height: 20 }}
+                />
+              </InputAdornment>
+            }
+          />
+          <SelectDeparment filterId={filterId} department={department} handleChangeDeparment={onDeparment} />
+        </div>)}
     </StyledRoot>
   );
 }
