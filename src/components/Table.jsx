@@ -1,5 +1,5 @@
 // import * as React from "react";
-import { Box, Collapse, IconButton, Typography } from "@mui/material";
+import { Alert, Box, Collapse, IconButton, Typography } from "@mui/material";
 import Paper from "@mui/material/Paper";
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
@@ -42,6 +42,9 @@ export function TableWorkers({ data, title, date }) {
   const [orderBy, setOrderBy] = useState("name");
   const [order, setOrder] = useState("asc");
   const [disabledBtnNewResults, setDisabledBtnNewResults] = useState(true);
+
+  // -------------------Rango de fecha alert
+  const [dateNoValid, setDateNoValid] = useState(false);
 
   // -------Departamentos
   const [department, setDeparment] = useState(0);
@@ -180,7 +183,8 @@ export function TableWorkers({ data, title, date }) {
         .then(response => {
           if (!response.ok) {
             return response.json().then(error => {
-              throw new Error(`Error ${response.status}: ${error.message}`);
+              setDateNoValid(true);
+              throw new Error(`Error ${response.status}: ${error.error}`);
             });
           }
           return response.json();
@@ -206,7 +210,7 @@ export function TableWorkers({ data, title, date }) {
           console.log('Success:', data);
         })
         .catch(error => {
-          console.error('Error:', error);
+          console.error(error);
         }).finally(() => {
           setApplyFilter(false);
         });
@@ -275,8 +279,9 @@ export function TableWorkers({ data, title, date }) {
                 setDateEnd={setDate_end} />
               {/* <SelectDateSearch /> */}
             </Stack>
-            <div className="w-[95%] mx-[2.5%] flex justify-center content-center mb-2 gap-2 flex-wrap">
-              <Button halfWidth type={"submit"} >Aplicar Filtros</Button>
+            <div className="w-[95%] mx-[2.5%] flex flex-col justify-center content-center mb-2 gap-2 flex-wrap">
+            {<Alert severity="error" sx={{ display: dateNoValid ? "flex" : "none",  }}>La fecha de inicio no puede ser mayor a la fecha de fin</Alert>}
+              <Button halfWidth type={"submit"} event={()=>{setDateNoValid(false)}}>Aplicar Filtros</Button>
             </div>
           </form>
           <div className="w-full flex justify-center gap-2 mb-2 flex-wrap">

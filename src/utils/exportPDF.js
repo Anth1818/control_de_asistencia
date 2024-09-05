@@ -41,22 +41,6 @@ function handleExportPDF(
   doc.setFont("helvetica", "bold");
   
   doc.text(title, 20, 35, { maxWidth: maxWidthHeading });
-  // let heading = "";
-  // if (filterId) {
-  //   if (date_start === "" && date_end === "") {
-  //     heading = `Reporte de asistencia del trabajador con cédula ${filterId}`;
-  //   } else {
-  //     heading = `Reporte de asistencia del trabajador con cédula ${filterId} del ${date_start} al\n ${date_end}`;
-  //   }
-  // } else {
-  //   heading = `Reporte de asistencia generado el ${date} en el rango de fecha ${
-  //     date_start === "" ? "--/--/----" : date_start
-  //   } al ${date_end === "" ? "--/--/----" : date_end} en el departamento: ${
-  //     departmentSelected?.name === undefined
-  //       ? "'Todos los departamentos'"
-  //       : departmentSelected?.name
-  //   }`;
-  // }
   doc.addImage(cintilloInamujerBase64, "PNG", 0, 0, 210, 25);
   doc.addImage(inamujerLogoBase64, "PNG", 0, 25, 20, 20);
 

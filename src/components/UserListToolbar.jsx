@@ -69,7 +69,9 @@ export default function UserListToolbar({
             onChange={onFilterId}
             placeholder={searchLabel}
             inputProps={{
-              pattern: "^[0-9]+$",
+              pattern:"^[0-9]+$",
+              maxLength:9,
+              minLength:6,
               onInvalid: (e) => {
                 e.target.setCustomValidity("Por favor, ingrese una cédula válida.");
               },
