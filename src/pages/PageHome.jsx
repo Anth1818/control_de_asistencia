@@ -5,7 +5,8 @@ import { Header } from "../components/Header";
 import WorkerDetails from "../components/WorkerDetails";
 import { Alert } from "@mui/material";
 import CheckIcon from '@mui/icons-material/Check';
-import { date, hour } from "../utils/date";
+import { date} from "../utils/date";
+import configApi from "../api/configApi";
 
 export const PageHome = () => {
   const [showModal, setShowModal] = useState(false);
@@ -38,11 +39,14 @@ export const PageHome = () => {
     setShowModal(false);
   };
 
+  const apiEndPointGetWorkerByid = configApi.apiBaseUrl + configApi.endpoints.searchWorkerById;
+  const apiEndPointGetAttendance = configApi.apiBaseUrl + configApi.endpoints.getAttendance;
+
   // ------Buscar trabajador en la base de datos
   useEffect(() => {
     if (searchWorkerBtn || checkInBtn || checkOutBtn) {
       setLoader(true);
-      fetch(`http://172.30.40.23:3000/attendance/${workerIdentity}`, {
+      fetch(`${apiEndPointGetWorkerByid}${workerIdentity}`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -68,7 +72,7 @@ export const PageHome = () => {
   useEffect(() => {
     if (!checkInBtn) return;
     if (worker.check_in) return;
-    fetch("http://172.30.40.23:3000/attendance", {
+    fetch(apiEndPointGetAttendance, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -94,7 +98,7 @@ export const PageHome = () => {
   useEffect(() => {
     if (!checkOutBtn) return;
     if (worker.check_out) return;
-    fetch("http://172.30.40.23:3000/attendance", {
+    fetch(apiEndPointGetAttendance, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
@@ -119,7 +123,7 @@ export const PageHome = () => {
     if (checkInSuccess) {
       const timer = setTimeout(() => {
         setCheckInSuccess(false);
-      }, 3000);
+      }, 5000);
       return () => clearTimeout(timer);
     }
   }, [checkInSuccess]);
@@ -128,7 +132,7 @@ export const PageHome = () => {
     if (checkOutSuccess) {
       const timer = setTimeout(() => {
         setCheckOutSuccess(false);
-      }, 3000);
+      }, 5000);
       return () => clearTimeout(timer);
     }
   }, [checkOutSuccess]);
@@ -148,6 +152,9 @@ export const PageHome = () => {
                 className=" h-10 w-full bg-background text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 flex-1 mr-2 px-3 py-2 border border-gray-300 rounded-md"
                 placeholder="Ingresar cédula"
                 type="text"
+                pattern="^[0-9]+$"
+                onInvalid={(e) => e.target.setCustomValidity("Por favor, ingrese una cédula válida.")}
+                onInput={(e) => e.target.setCustomValidity("")}
                 value={workerIdentity}
                 onChange={(e) => setWorkerIdentity(e.target.value)}
               />

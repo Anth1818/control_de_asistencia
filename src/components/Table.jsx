@@ -22,71 +22,11 @@ import DateRangeCalendarValue from "./DateRangeCalenderValue";
 import Button from "./Button";
 import handleExportPDF  from "../utils/exportPDF.js";
 import departments from "../utils/departments";
-
-const columns = [
-  { id: "details_user", label: "Detalles", align: "center", minWidth: 120, },
-  { id: "identity_card", label: "Cédula", minWidth: 170, align: "center" },
-  { id: "department", label: "Departamento", minWidth: 170, align: "center" },
-  {
-    id: "full_name",
-    label: "Nombre y Apellido",
-    minWidth: 100,
-    align: "center",
-  },
-  {
-    id: "date_attendance_string",
-    label: "Fecha",
-    minWidth: 170,
-    align: "center",
-  },
-  // {
-  //   id: "hora_entrada",
-  //   label: "Hora de entrada",
-  //   minWidth: 170,
-  //   align: "center",
-  // },
-  // {
-  //   id: "hora_salida",
-  //   label: "Hora de salida",
-  //   minWidth: 170,
-  //   align: "center",
-  // },
-  // {
-  //   id: "exportar",
-  //   label: "Exportar",
-  //   minWidth: 170,
-  //   align: "center",
-  // },
-];
-
-function descendingComparator(a, b, orderBy) {
-  if (b[orderBy] < a[orderBy]) {
-    return -1;
-  }
-  if (b[orderBy] > a[orderBy]) {
-    return 1;
-  }
-  return 0;
-}
-
-function getComparator(order, orderBy) {
-  return order === "desc"
-    ? (a, b) => descendingComparator(a, b, orderBy)
-    : (a, b) => -descendingComparator(a, b, orderBy);
-}
+import configApi from "../api/configApi.js";
 
 
 export function TableWorkers({ data, title, date }) {
   const [attendance, setAttendance] = useState([]);
-
-  
-  useEffect(() => {
-    setAttendance(data);
-  }, [data]);
-
-
-
-  // ----------Rango de fecha
   const [date_start, setDate_start] = useState("");
   const [date_end, setDate_end] = useState("");
 
@@ -95,14 +35,79 @@ export function TableWorkers({ data, title, date }) {
 
   // ----------Paginación y filtro por cédula
   const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(250);
+  const [pageDB, setPageDB] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(1000);
   const [openRows, setOpenRows] = useState({});
   const [filterId, setFilterId] = useState("");
   const [orderBy, setOrderBy] = useState("name");
   const [order, setOrder] = useState("asc");
+  const [disabledBtnNewResults, setDisabledBtnNewResults] = useState(true);
 
   // -------Departamentos
   const [department, setDeparment] = useState(0);
+  const apiEndPointGetAttendanceByFilter = `${configApi.apiBaseUrl}${configApi.endpoints.getAttendanceByfilter}${pageDB}/lim/${rowsPerPage}`
+  // console.log(apiEndPointGetAttendanceByFilter)
+  // console.log(attendance)
+
+  useEffect(() => {
+    setAttendance(data);
+  }, [data]);
+
+  const columns = [
+    { id: "details_user", label: "Detalles", align: "center", minWidth: 120, },
+    { id: "identity_card", label: "Cédula", minWidth: 170, align: "center" },
+    { id: "department", label: "Departamento", minWidth: 170, align: "center" },
+    {
+      id: "full_name",
+      label: "Nombre y Apellido",
+      minWidth: 100,
+      align: "center",
+    },
+    {
+      id: "date_attendance_string",
+      label: "Fecha",
+      minWidth: 170,
+      align: "center",
+    },
+    // {
+    //   id: "hora_entrada",
+    //   label: "Hora de entrada",
+    //   minWidth: 170,
+    //   align: "center",
+    // },
+    // {
+    //   id: "hora_salida",
+    //   label: "Hora de salida",
+    //   minWidth: 170,
+    //   align: "center",
+    // },
+    // {
+    //   id: "exportar",
+    //   label: "Exportar",
+    //   minWidth: 170,
+    //   align: "center",
+    // },
+  ];
+  
+  function descendingComparator(a, b, orderBy) {
+    if (b[orderBy] < a[orderBy]) {
+      return -1;
+    }
+    if (b[orderBy] > a[orderBy]) {
+      return 1;
+    }
+    return 0;
+  }
+  
+  function getComparator(order, orderBy) {
+    return order === "desc"
+      ? (a, b) => descendingComparator(a, b, orderBy)
+      : (a, b) => -descendingComparator(a, b, orderBy);
+  }
+
+
+  // ----------Rango de fecha
+  
   const handleChangeDepartment = (event) => {
     setDeparment(event.target.value);
   };
@@ -162,10 +167,10 @@ export function TableWorkers({ data, title, date }) {
   }
 
   useEffect(() => {
-    if (applyFilter) {
+    if (applyFilter || pageDB > 1) {
       const data = { date_start, date_end, department, ic: toNumber(filterId) };
       console.log(data);
-      fetch(`http://172.30.40.23:3000/attendance/filter/pag/${page + 1}/lim/${rowsPerPage}`, {
+      fetch(apiEndPointGetAttendanceByFilter, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -181,7 +186,23 @@ export function TableWorkers({ data, title, date }) {
           return response.json();
         })
         .then(data => {
-          setAttendance(data.data);
+          console.log(data.data);
+          setAttendance(data.data);    
+          // Verificar si se deben habilitar nuevos resultados
+          if ( data.data.length <= 1000) {
+            console.log(data.data.length);
+            const combinedData = [...attendance, ...data.data];
+            const uniqueData = combinedData.filter((item, index) => {
+              return combinedData.findIndex((item2) => item2.id === item.id) === index;
+            })
+            setAttendance(uniqueData);
+          }
+          if (data.data.length >= 1000) {
+            setDisabledBtnNewResults(false);
+          }else{
+            setDisabledBtnNewResults(true);
+          }
+        
           console.log('Success:', data);
         })
         .catch(error => {
@@ -190,7 +211,7 @@ export function TableWorkers({ data, title, date }) {
           setApplyFilter(false);
         });
     }
-  }, [applyFilter]);
+  }, [applyFilter, pageDB]);
 
   const handleFetchByFilters = (event) => {
     event.preventDefault();
@@ -201,7 +222,7 @@ export function TableWorkers({ data, title, date }) {
   // console.log(filterId)
   // console.log(department);
   // console.log(fecha_start, fecha_end);
-  console.log(filteredAttendance);
+  // console.log(filteredAttendance);
 
   return (
     <Box
@@ -261,6 +282,7 @@ export function TableWorkers({ data, title, date }) {
           <div className="w-full flex justify-center gap-2 mb-2 flex-wrap">
             <Button event={() => { handleExportPDF(date_start, date_end, departmentSelected, filterId, filteredAttendance, date) }} >Exportar a pdf</Button>
             <Button event={handleClearFilters}>Limpiar filtros</Button>
+            <Button event={()=>{setPageDB(pageDB + 1)}} disabled={disabledBtnNewResults}>Cargar mas resultados</Button>
           </div>
 
 
@@ -446,7 +468,7 @@ export function TableWorkers({ data, title, date }) {
           </Table>
         </TableContainer>
         <TablePagination
-          rowsPerPageOptions={[10, 25, 100, 250, 1000]}
+          rowsPerPageOptions={[1000]}
           component="div"
           labelRowsPerPage="Filas por página"
           count={attendance?.length || 0}

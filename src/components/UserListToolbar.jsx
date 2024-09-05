@@ -68,6 +68,15 @@ export default function UserListToolbar({
             name="filter"
             onChange={onFilterId}
             placeholder={searchLabel}
+            inputProps={{
+              pattern: "^[0-9]+$",
+              onInvalid: (e) => {
+                e.target.setCustomValidity("Por favor, ingrese una cédula válida.");
+              },
+              onInput: (e) => {
+                e.target.setCustomValidity("");
+              }
+            }}
             startAdornment={
               <InputAdornment position="start">
                 <Iconify
