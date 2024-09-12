@@ -23,6 +23,7 @@ import Button from "./Button";
 import handleExportPDF  from "../utils/exportPDF.js";
 import departments from "../utils/departments";
 import configApi from "../api/configApi.js";
+import convertDateFormat from "../utils/convertDateFormat";
 
 
 export function TableWorkers({ data, title, date }) {
@@ -36,7 +37,7 @@ export function TableWorkers({ data, title, date }) {
   // ----------Paginación y filtro por cédula
   const [page, setPage] = useState(0);
   const [pageDB, setPageDB] = useState(1);
-  const [rowsPerPage, setRowsPerPage] = useState(1000);
+  const [rowsPerPage, setRowsPerPage] = useState(25);
   const [openRows, setOpenRows] = useState({});
   const [filterId, setFilterId] = useState("");
   const [orderBy, setOrderBy] = useState("name");
@@ -48,7 +49,7 @@ export function TableWorkers({ data, title, date }) {
 
   // -------Departamentos
   const [department, setDeparment] = useState(0);
-  const apiEndPointGetAttendanceByFilter = `${configApi.apiBaseUrl}${configApi.endpoints.getAttendanceByfilter}${pageDB}/lim/${rowsPerPage}`
+  const apiEndPointGetAttendanceByFilter = `${configApi.apiBaseUrl}${configApi.endpoints.getAttendanceByfilter}${pageDB}/lim/${1000}`
   // console.log(apiEndPointGetAttendanceByFilter)
   // console.log(attendance)
 
@@ -171,7 +172,7 @@ export function TableWorkers({ data, title, date }) {
 
   useEffect(() => {
     if (applyFilter || pageDB > 1) {
-      const data = { date_start, date_end, department, ic: toNumber(filterId) };
+      const data = { date_start, date_end, department, ic: toNumber(filterId), dateStartMilliseconds: new Date(convertDateFormat(date_start)).getTime(), dateEndMilliseconds: new Date(convertDateFormat(date_end)).getTime() };
       console.log(data);
       fetch(apiEndPointGetAttendanceByFilter, {
         method: 'POST',
@@ -473,11 +474,11 @@ export function TableWorkers({ data, title, date }) {
           </Table>
         </TableContainer>
         <TablePagination
-          rowsPerPageOptions={[1000]}
+          rowsPerPageOptions={[5, 10, 25, 100]}
           component="div"
           labelRowsPerPage="Filas por página"
           count={attendance?.length || 0}
-          rowsPerPage={rowsPerPage}
+          rowsPerPage={rowsPerPage || 0}
           page={page}
           onPageChange={handleChangePage}
           onRowsPerPageChange={handleChangeRowsPerPage}

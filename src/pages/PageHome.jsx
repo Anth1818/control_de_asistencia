@@ -49,7 +49,7 @@ export const PageHome = () => {
     if (workerIdentity) {
       if (searchWorkerBtn || checkInBtn || checkOutBtn) {
         setLoader(true);
-        fetch(`${apiEndPointGetWorkerByid}${workerIdentity}`, {
+        fetch(`${apiEndPointGetWorkerByid}/${workerIdentity}`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -72,18 +72,17 @@ export const PageHome = () => {
           });
       }
     }
-  }, [searchWorkerBtn]);
+  }, [searchWorkerBtn, workerIdentity]);
 
   // ------Marcar hora de entrada en la base de datos
   useEffect(() => {
-    if (!checkInBtn) return;
-    if (worker.check_in) return;
+    if (checkInBtn){
     fetch(apiEndPointGetAttendance, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ id: worker.worker_id }),
+      body: JSON.stringify({ id: worker?.worker_id }),
     })
       .then((response) => {
         if (response.ok) {
@@ -106,7 +105,8 @@ export const PageHome = () => {
       .finally(() => {
         setCheckInBtn(false);
       });
-  }, [checkInBtn]);
+  }
+}, [checkInBtn]);
 
   // --------- Actualización de hora de salida en la base de datos
   useEffect(() => {
@@ -157,7 +157,7 @@ export const PageHome = () => {
     }
   }, [checkOutSuccess]);
 
-  console.log(worker);
+  // console.log(worker);
 
   return (
     <>
