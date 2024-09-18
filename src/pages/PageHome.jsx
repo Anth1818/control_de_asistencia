@@ -96,7 +96,6 @@ export const PageHome = () => {
               date_attendance_string: date,
               date_attendance: date,
               check_in_string: data.data.check_in_string,
-              check_out_string: null,
             });
             console.log(data);
           });

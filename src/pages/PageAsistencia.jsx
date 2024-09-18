@@ -17,8 +17,7 @@ export const PageTrabajadores = () => {
     navigate("/");
   };
 
-  // const api = "http://172.30.40.23:3000/attendance";
-  // const localApi = "http://localhost:3000/attendance"
+  
   const apiEndPointGetAttendanceToday = configApi.apiBaseUrl + configApi.endpoints.getAttendance;
 
 
@@ -37,7 +36,7 @@ export const PageTrabajadores = () => {
   return <>
     <Header ViewLogout={true} handleLogout={handleLogout}></Header>
     <div className="mt-4">
-      <TableWorkers title="Lista de asistencia" data={data.data} date={date}></TableWorkers>
+      <TableWorkers title="Lista de asistencia" dataInitial={data.data} date={date}></TableWorkers>
     </div>
 
   </>

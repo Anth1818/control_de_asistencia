@@ -13,26 +13,25 @@ import { useEffect } from "react";
 import InfoIcon from "@mui/icons-material/Info";
 import React from "react";
 import { Stack } from "@mui/system";
-import { filter, toNumber } from "lodash";
+import { filter, set, toNumber } from "lodash";
 // import { Link } from "react-router-dom";
 import UserListToolbar from "./UserListToolbar";
 import PropTypes from "prop-types";
 import DateRangeCalendarValue from "./DateRangeCalenderValue";
 // import SelectDateSearch from "./SelectDateSearch";
 import Button from "./Button";
-import handleExportPDF  from "../utils/exportPDF.js";
+import handleExportPDF from "../utils/exportPDF.js";
 import departments from "../utils/departments";
 import configApi from "../api/configApi.js";
 import convertDateFormat from "../utils/convertDateFormat";
 
-
-export function TableWorkers({ data, title, date }) {
+export function TableWorkers({ dataInitial, title, date }) {
   const [attendance, setAttendance] = useState([]);
   const [date_start, setDate_start] = useState("");
   const [date_end, setDate_end] = useState("");
-  const [dateError, setDateError] = useState(false);
+  // const [dateError, setDateError] = useState(false);
   const [applyFilter, setApplyFilter] = useState(false);
-
+  const [holdResults, setHoldResults] = useState(false);
 
   // ----------Paginación y filtro por cédula
   const [page, setPage] = useState(0);
@@ -43,22 +42,25 @@ export function TableWorkers({ data, title, date }) {
   const [orderBy, setOrderBy] = useState("name");
   const [order, setOrder] = useState("asc");
   const [disabledBtnNewResults, setDisabledBtnNewResults] = useState(true);
+  const [disableHoldResults, setDisableHoldResults] = useState(false);
 
   // -------------------Rango de fecha alert
   const [dateNoValid, setDateNoValid] = useState(false);
 
   // -------Departamentos
   const [department, setDeparment] = useState(0);
-  const apiEndPointGetAttendanceByFilter = `${configApi.apiBaseUrl}${configApi.endpoints.getAttendanceByfilter}${pageDB}/lim/${1000}`
+  const apiEndPointGetAttendanceByFilter = `${configApi.apiBaseUrl}${
+    configApi.endpoints.getAttendanceByfilter
+  }${pageDB}/lim/${1000}`;
   // console.log(apiEndPointGetAttendanceByFilter)
   // console.log(attendance)
 
   useEffect(() => {
-    setAttendance(data);
-  }, [data]);
+    setAttendance(dataInitial);
+  }, [dataInitial]);
 
   const columns = [
-    { id: "details_user", label: "Detalles", align: "center", minWidth: 120, },
+    { id: "details_user", label: "Detalles", align: "center", minWidth: 120 },
     { id: "identity_card", label: "Cédula", minWidth: 170, align: "center" },
     { id: "department", label: "Departamento", minWidth: 170, align: "center" },
     {
@@ -92,7 +94,7 @@ export function TableWorkers({ data, title, date }) {
     //   align: "center",
     // },
   ];
-  
+
   function descendingComparator(a, b, orderBy) {
     if (b[orderBy] < a[orderBy]) {
       return -1;
@@ -102,23 +104,22 @@ export function TableWorkers({ data, title, date }) {
     }
     return 0;
   }
-  
+
   function getComparator(order, orderBy) {
     return order === "desc"
       ? (a, b) => descendingComparator(a, b, orderBy)
       : (a, b) => -descendingComparator(a, b, orderBy);
   }
 
-
   // ----------Rango de fecha
-  
+
   const handleChangeDepartment = (event) => {
     setDeparment(event.target.value);
   };
 
   const departmentSelected = departments.find((dept) => dept.id === department);
 
-  function applySortFilter(array, comparator, query,) {
+  function applySortFilter(array, comparator, query) {
     const stabilizedThis = array?.map((el, index) => [el, index]);
     stabilizedThis?.sort((a, b) => {
       const order = comparator(a[0], b[0]);
@@ -158,7 +159,7 @@ export function TableWorkers({ data, title, date }) {
   const filteredAttendance = applySortFilter(
     attendance,
     getComparator(order, orderBy),
-    filterId,
+    filterId
   );
 
   const isNotFound = !filteredAttendance?.length && !!filterId;
@@ -168,60 +169,83 @@ export function TableWorkers({ data, title, date }) {
     setDate_start("");
     setDate_end("");
     setDeparment(0);
-  }
+  };
+  const handleFetchByFilters = (event) => {
+    event.preventDefault();
+    setApplyFilter(true);
+  };
+
+  const handleClearResults = () => {
+    setAttendance([]);
+    setPageDB(1);
+    setDisableHoldResults(false);
+    setPage(0);
+  };
 
   useEffect(() => {
     if (applyFilter || pageDB > 1) {
-      const data = { date_start, date_end, department, ic: toNumber(filterId), dateStartMilliseconds: new Date(convertDateFormat(date_start)).getTime(), dateEndMilliseconds: new Date(convertDateFormat(date_end)).getTime() };
+      const data = {
+        date_start,
+        date_end,
+        department,
+        ic: toNumber(filterId),
+        dateStartMilliseconds: new Date(
+          convertDateFormat(date_start)
+        ).getTime(),
+        dateEndMilliseconds: new Date(convertDateFormat(date_end)).getTime(),
+      };
       console.log(data);
       fetch(apiEndPointGetAttendanceByFilter, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json'
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify(data)
+        body: JSON.stringify(data),
       })
-        .then(response => {
+        .then((response) => {
           if (!response.ok) {
-            return response.json().then(error => {
+            return response.json().then((error) => {
               setDateNoValid(true);
               throw new Error(error.error);
             });
           }
           return response.json();
         })
-        .then(data => {
+        .then((data) => {
           console.log(data.data);
-          setAttendance(data.data);    
+          setAttendance(data.data);
           // Verificar si se deben habilitar nuevos resultados
-          if ( data.data.length <= 1000) {
+          if (holdResults) {
             console.log(data.data.length);
             const combinedData = [...attendance, ...data.data];
             const uniqueData = combinedData.filter((item, index) => {
-              return combinedData.findIndex((item2) => item2.id === item.id) === index;
-            })
+              return (
+                combinedData.findIndex((item2) => item2.id === item.id) ===
+                index
+              );
+            });
             setAttendance(uniqueData);
           }
           if (data.data.length >= 1000) {
             setDisabledBtnNewResults(false);
-          }else{
+            setHoldResults(true);
+            setDisableHoldResults(true);
+          } else {
             setDisabledBtnNewResults(true);
+
+            console.log("Success:", data);
           }
-        
-          console.log('Success:', data);
         })
-        .catch(error => {
+        .catch((error) => {
           console.error(error);
-        }).finally(() => {
+        })
+        .finally(() => {
           setApplyFilter(false);
         });
     }
   }, [applyFilter, pageDB]);
 
-  const handleFetchByFilters = (event) => {
-    event.preventDefault();
-    setApplyFilter(true);
-  };
+  console.log(holdResults);
 
   // const filteredUsersReverse = [...filteredUsers].reverse();
   // console.log(filterId)
@@ -257,7 +281,11 @@ export function TableWorkers({ data, title, date }) {
           </Stack>
 
           <form onSubmit={handleFetchByFilters}>
-            <Stack direction="column" flexWrap={"wrap"} justifyContent={"center"}>
+            <Stack
+              direction="column"
+              flexWrap={"wrap"}
+              justifyContent={"center"}
+            >
               <label className="ml-6 mb-9 lg:mb-0">
                 <b>Buscar por:</b>{" "}
               </label>
@@ -277,20 +305,72 @@ export function TableWorkers({ data, title, date }) {
                 date_start={date_start}
                 date_end={date_end}
                 setDateStart={setDate_start}
-                setDateEnd={setDate_end} />
+                setDateEnd={setDate_end}
+              />
               {/* <SelectDateSearch /> */}
             </Stack>
             <div className="w-[95%] mx-[2.5%] flex flex-col justify-center content-center mb-2 gap-2 flex-wrap">
-            {<Alert  severity="error" sx={{ display: dateNoValid ? "flex" : "none", justifyContent:"center"  }}>Rango de fecha no válido</Alert>}
-              <Button halfWidth type={"submit"} event={()=>{setDateNoValid(false)}}>Aplicar Filtros</Button>
+              {
+                <Alert
+                  severity="error"
+                  sx={{
+                    display: dateNoValid ? "flex" : "none",
+                    justifyContent: "center",
+                  }}
+                >
+                  Rango de fecha no válido
+                </Alert>
+              }
+              {/* <label htmlFor="hold">
+                ¿Mantener los registros encontrados con cada consulta?
+              </label>
+              <input
+                type="checkbox"
+                name="hold"
+                id="hold"
+                disabled={disableHoldResults}
+                value={holdResults}
+                onChange={() => setHoldResults(!holdResults)}
+              /> */}
+              <Button
+                halfWidth
+                type={"submit"}
+                event={() => {
+                  setDateNoValid(false);
+                  setHoldResults(false);
+                  setPageDB(1);
+                }}
+              >
+                Aplicar Filtros
+              </Button>
             </div>
           </form>
           <div className="w-full flex justify-center gap-2 mb-2 flex-wrap">
-            <Button event={() => { handleExportPDF(date_start, date_end, departmentSelected, filterId, filteredAttendance, date) }} >Exportar a pdf</Button>
+            <Button
+              event={() => {
+                handleExportPDF(
+                  date_start,
+                  date_end,
+                  departmentSelected,
+                  filterId,
+                  filteredAttendance,
+                  date
+                );
+              }}
+            >
+              Exportar a pdf
+            </Button>
             <Button event={handleClearFilters}>Limpiar filtros</Button>
-            <Button event={()=>{setPageDB(pageDB + 1)}} disabled={disabledBtnNewResults}>Cargar mas resultados</Button>
+            <Button event={handleClearResults}>Borrar resultados</Button>
+            <Button
+              event={() => {
+                setPageDB(pageDB + 1);
+              }}
+              disabled={disabledBtnNewResults}
+            >
+              Cargar mas resultados
+            </Button>
           </div>
-
 
           <Table stickyHeader aria-label="sticky table">
             <TableHead>
@@ -465,7 +545,6 @@ export function TableWorkers({ data, title, date }) {
                       <Typography variant="h6" paragraph>
                         {"No hay registros"}
                       </Typography>
-
                     </Paper>
                   </TableCell>
                 </TableRow>
