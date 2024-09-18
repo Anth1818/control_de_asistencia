@@ -7,6 +7,7 @@ import { Alert } from "@mui/material";
 import CheckIcon from "@mui/icons-material/Check";
 import { date } from "../utils/date";
 import configApi from "../api/configApi";
+import { useUser } from "../context/userContext";
 
 export const PageHome = () => {
   const [showModal, setShowModal] = useState(false);
@@ -18,6 +19,7 @@ export const PageHome = () => {
   const [checkInSuccess, setCheckInSuccess] = useState(false);
   const [checkOutSuccess, setCheckOutSuccess] = useState(false);
   const [loader, setLoader] = useState(false);
+  const {setErrorCredentials } = useUser();
 
   const handleSearchWorker = (e) => {
     e.preventDefault();
@@ -37,6 +39,7 @@ export const PageHome = () => {
   };
   const closeModal = () => {
     setShowModal(false);
+    setErrorCredentials(null);
   };
 
   const apiEndPointGetWorkerByid =

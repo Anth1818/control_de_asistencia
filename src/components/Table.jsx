@@ -30,7 +30,7 @@ export function TableWorkers({ data, title, date }) {
   const [attendance, setAttendance] = useState([]);
   const [date_start, setDate_start] = useState("");
   const [date_end, setDate_end] = useState("");
-
+  const [dateError, setDateError] = useState(false);
   const [applyFilter, setApplyFilter] = useState(false);
 
 
@@ -185,7 +185,7 @@ export function TableWorkers({ data, title, date }) {
           if (!response.ok) {
             return response.json().then(error => {
               setDateNoValid(true);
-              throw new Error(`Error ${response.status}: ${error.error}`);
+              throw new Error(error.error);
             });
           }
           return response.json();
@@ -281,7 +281,7 @@ export function TableWorkers({ data, title, date }) {
               {/* <SelectDateSearch /> */}
             </Stack>
             <div className="w-[95%] mx-[2.5%] flex flex-col justify-center content-center mb-2 gap-2 flex-wrap">
-            {<Alert severity="error" sx={{ display: dateNoValid ? "flex" : "none",  }}>La fecha de inicio no puede ser mayor a la fecha de fin</Alert>}
+            {<Alert  severity="error" sx={{ display: dateNoValid ? "flex" : "none", justifyContent:"center"  }}>Rango de fecha no válido</Alert>}
               <Button halfWidth type={"submit"} event={()=>{setDateNoValid(false)}}>Aplicar Filtros</Button>
             </div>
           </form>
