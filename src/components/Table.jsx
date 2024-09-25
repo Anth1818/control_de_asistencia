@@ -9,27 +9,24 @@ import TableHead from "@mui/material/TableHead";
 import TablePagination from "@mui/material/TablePagination";
 import TableRow from "@mui/material/TableRow";
 import { useState } from "react";
-import { useEffect } from "react";
 import InfoIcon from "@mui/icons-material/Info";
 import React from "react";
 import { Stack } from "@mui/system";
-import { filter, set, toNumber } from "lodash";
-// import { Link } from "react-router-dom";
+import { filter, } from "lodash";
 import UserListToolbar from "./UserListToolbar";
 import PropTypes from "prop-types";
 import DateRangeCalendarValue from "./DateRangeCalenderValue";
-// import SelectDateSearch from "./SelectDateSearch";
 import Button from "./Button";
 import handleExportPDF from "../utils/exportPDF.js";
 import departments from "../utils/departments";
-import configApi from "../api/configApi.js";
-import convertDateFormat from "../utils/convertDateFormat";
+import useAttendance from "../hooks/useAttendance";
 
-export function TableWorkers({ dataInitial, title, date }) {
-  const [attendance, setAttendance] = useState([]);
+
+export function TableAttendance({ dataInitial, title, date }) {
+
   const [date_start, setDate_start] = useState("");
   const [date_end, setDate_end] = useState("");
-  // const [dateError, setDateError] = useState(false);
+
   const [applyFilter, setApplyFilter] = useState(false);
   const [holdResults, setHoldResults] = useState(false);
 
@@ -41,23 +38,23 @@ export function TableWorkers({ dataInitial, title, date }) {
   const [filterId, setFilterId] = useState("");
   const [orderBy, setOrderBy] = useState("name");
   const [order, setOrder] = useState("asc");
-  const [disabledBtnNewResults, setDisabledBtnNewResults] = useState(true);
-  const [disableHoldResults, setDisableHoldResults] = useState(false);
-
-  // -------------------Rango de fecha alert
-  const [dateNoValid, setDateNoValid] = useState(false);
 
   // -------Departamentos
   const [department, setDeparment] = useState(0);
-  const apiEndPointGetAttendanceByFilter = `${configApi.apiBaseUrl}${
-    configApi.endpoints.getAttendanceByfilter
-  }${pageDB}/lim/${1000}`;
-  // console.log(apiEndPointGetAttendanceByFilter)
-  // console.log(attendance)
 
-  useEffect(() => {
-    setAttendance(dataInitial);
-  }, [dataInitial]);
+  const { attendance, dateNoValid, disabledBtnNewResults, setDateNoValid, setAttendance, setDisableHoldResults } = useAttendance(
+    dataInitial,
+    applyFilter,
+    pageDB,
+    filterId,
+    date_start,
+    date_end,
+    department,
+    holdResults,
+    setApplyFilter,
+    setHoldResults
+  );
+
 
   const columns = [
     { id: "details_user", label: "Detalles", align: "center", minWidth: 120 },
@@ -75,24 +72,6 @@ export function TableWorkers({ dataInitial, title, date }) {
       minWidth: 170,
       align: "center",
     },
-    // {
-    //   id: "hora_entrada",
-    //   label: "Hora de entrada",
-    //   minWidth: 170,
-    //   align: "center",
-    // },
-    // {
-    //   id: "hora_salida",
-    //   label: "Hora de salida",
-    //   minWidth: 170,
-    //   align: "center",
-    // },
-    // {
-    //   id: "exportar",
-    //   label: "Exportar",
-    //   minWidth: 170,
-    //   align: "center",
-    // },
   ];
 
   function descendingComparator(a, b, orderBy) {
@@ -180,78 +159,8 @@ export function TableWorkers({ dataInitial, title, date }) {
     setPageDB(1);
     setDisableHoldResults(false);
     setPage(0);
+    setHoldResults(false);
   };
-
-  useEffect(() => {
-    if (applyFilter || pageDB > 1) {
-      const data = {
-        date_start,
-        date_end,
-        department,
-        ic: toNumber(filterId),
-        dateStartMilliseconds: new Date(
-          convertDateFormat(date_start)
-        ).getTime(),
-        dateEndMilliseconds: new Date(convertDateFormat(date_end)).getTime(),
-      };
-      console.log(data);
-      fetch(apiEndPointGetAttendanceByFilter, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-      })
-        .then((response) => {
-          if (!response.ok) {
-            return response.json().then((error) => {
-              setDateNoValid(true);
-              throw new Error(error.error);
-            });
-          }
-          return response.json();
-        })
-        .then((data) => {
-          console.log(data.data);
-          setAttendance(data.data);
-          // Verificar si se deben habilitar nuevos resultados
-          if (holdResults) {
-            console.log(data.data.length);
-            const combinedData = [...attendance, ...data.data];
-            const uniqueData = combinedData.filter((item, index) => {
-              return (
-                combinedData.findIndex((item2) => item2.id === item.id) ===
-                index
-              );
-            });
-            setAttendance(uniqueData);
-          }
-          if (data.data.length >= 1000) {
-            setDisabledBtnNewResults(false);
-            setHoldResults(true);
-            setDisableHoldResults(true);
-          } else {
-            setDisabledBtnNewResults(true);
-
-            console.log("Success:", data);
-          }
-        })
-        .catch((error) => {
-          console.error(error);
-        })
-        .finally(() => {
-          setApplyFilter(false);
-        });
-    }
-  }, [applyFilter, pageDB]);
-
-  console.log(holdResults);
-
-  // const filteredUsersReverse = [...filteredUsers].reverse();
-  // console.log(filterId)
-  // console.log(department);
-  // console.log(fecha_start, fecha_end);
-  // console.log(filteredAttendance);
 
   return (
     <Box
@@ -321,17 +230,6 @@ export function TableWorkers({ dataInitial, title, date }) {
                   Rango de fecha no válido
                 </Alert>
               }
-              {/* <label htmlFor="hold">
-                ¿Mantener los registros encontrados con cada consulta?
-              </label>
-              <input
-                type="checkbox"
-                name="hold"
-                id="hold"
-                disabled={disableHoldResults}
-                value={holdResults}
-                onChange={() => setHoldResults(!holdResults)}
-              /> */}
               <Button
                 halfWidth
                 type={"submit"}
@@ -566,8 +464,8 @@ export function TableWorkers({ dataInitial, title, date }) {
     </Box>
   );
 }
-TableWorkers.propTypes = {
-  data: PropTypes.array,
+TableAttendance.propTypes = {
+  dataInitial: PropTypes.array,
   title: PropTypes.string,
   date: PropTypes.string,
 };
