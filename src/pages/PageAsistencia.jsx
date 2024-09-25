@@ -1,7 +1,6 @@
 import { Header } from "../components/Header";
-import { TableWorkers } from "../components/Table"
+import { TableAttendance } from "../components/Table"
 import { useState, useEffect } from "react";
-import {date} from "../utils/date";
 import configApi from "../api/configApi";
 import { useUser } from "../context/userContext";
 import { useNavigate } from "react-router-dom";
@@ -36,7 +35,7 @@ export const PageTrabajadores = () => {
   return <>
     <Header ViewLogout={true} handleLogout={handleLogout}></Header>
     <div className="mt-4">
-      <TableWorkers title="Lista de asistencia" dataInitial={data.data} date={date}></TableWorkers>
+      <TableAttendance title="Lista de asistencia" dataInitial={data.data}></TableAttendance>
     </div>
 
   </>
