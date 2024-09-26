@@ -25,7 +25,41 @@ Este proyecto es una aplicación web para el control de asistencia de trabajador
 
 ## Estructura del Proyecto
 
-├── src │ ├── api │ │ └── configApi.js │ ├── components │ │ ├── Button.jsx │ │ ├── DateRangeCalenderValue.jsx │ │ ├── Header.jsx │ │ ├── ModalLogin.jsx │ │ ├── TableAttendance.jsx │ │ └── WorkerDetails.jsx │ ├── context │ │ └── userContext.js │ ├── hooks │ │ └── useAttendance.js │ ├── pages │ │ ├── PageHome.jsx │ │ └── PageAsistencia.jsx │ ├── utils │ │ ├── date.js │ │ ├── departments.js │ │ └── exportPDF.js │ └── index.js ├── public │ └── index.html ├── .gitignore ├── package.json └── README.md
+.
+├── src
+│   ├── api
+│   │   └── configApi.js
+│   ├── components
+│   │   ├── Button.jsx
+│   │   ├── CloseModal.jsx
+│   │   ├── DateRangeCalenderValue.jsx
+│   │   ├── Header.jsx
+│   │   ├── Iconify.jsx
+│   │   ├── ModalLogin.jsx
+│   │   ├── ProtectedRoute.jsx
+│   │   ├── SelectDeparments.jsx
+│   │   ├── Table.jsx
+│   │   ├── UserListToolbar.jsx
+│   │   └── WorkerDetails.jsx
+│   ├── context
+│   │   └── userContext.js
+│   ├── hooks
+│   │   ├── useAttendace.jsx
+│   │   └── useWorker.js
+│   ├── pages
+│   │   ├── PageHome.jsx
+│   │   └── PageAsistencia.jsx
+│   ├── utils
+│   │   ├── date.js
+│   │   ├── convertDateFormat.js
+│   │   ├── departments.js
+│   │   └── exportPDF.js
+│   └── index.js
+├── public
+│   └── cintillo_ministerio.png
+├── .gitignore
+├── package.json
+└── README.md
 
 ## Instalación
 Para instalar y ejecutar este proyecto en tu máquina local, sigue estos pasos:
