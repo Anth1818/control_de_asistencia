@@ -25,7 +25,7 @@ Este proyecto es una aplicación web para el control de asistencia de trabajador
 
 ## Estructura del Proyecto
 
-.
+```.
 ├── src
 │   ├── api
 │   │   └── configApi.js
@@ -60,7 +60,7 @@ Este proyecto es una aplicación web para el control de asistencia de trabajador
 ├── .gitignore
 ├── package.json
 └── README.md
-
+```
 ## Instalación
 Para instalar y ejecutar este proyecto en tu máquina local, sigue estos pasos:
 
