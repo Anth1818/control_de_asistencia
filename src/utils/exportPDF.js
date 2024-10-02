@@ -17,8 +17,15 @@ function toBase64(url) {
   });
 }
 
-const inamujerLogoBase64 = await toBase64(inamujerLogo);
-const cintilloInamujerBase64 = await toBase64(cintilloInamujer);
+let inamujerLogoBase64;
+let cintilloInamujerBase64;
+
+async function loadImages() {
+  inamujerLogoBase64 = await toBase64(inamujerLogo);
+  cintilloInamujerBase64 = await toBase64(cintilloInamujer);
+} 
+
+loadImages();
 
 function handleExportPDF(
   date_start,
