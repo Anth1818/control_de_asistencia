@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { date } from "../utils/date";
 import configApi from "../api/configApi";
 
-const useWorker = (workerIdentity, searchWorkerBtn, checkInBtn, checkOutBtn, setSearchWorkerBtn) => {
+const useWorker = (workerIdentity, searchWorkerBtn, checkInBtn, checkOutBtn, setSearchWorkerBtn, setCheckInBtn, setCheckOutBtn) => {
   const [worker, setWorker] = useState(null);
   const [loader, setLoader] = useState(false);
   const [checkInSuccess, setCheckInSuccess] = useState(false);
@@ -40,6 +40,8 @@ const useWorker = (workerIdentity, searchWorkerBtn, checkInBtn, checkOutBtn, set
     }
   }, [searchWorkerBtn]);
 
+
+  // -------Marcar entrada---------
   useEffect(() => {
     if (checkInBtn) {
       fetch(apiEndPointGetAttendance, {
@@ -59,10 +61,13 @@ const useWorker = (workerIdentity, searchWorkerBtn, checkInBtn, checkOutBtn, set
             check_in_string: data.data.check_in_string,
           });
         })
-        .catch((error) => console.error("Error:", error));
+        .catch((error) => console.error("Error:", error))
+        .finally(() => setCheckInBtn(false));
     }
   }, [checkInBtn]);
 
+
+  // -------Marcar salida---------
   useEffect(() => {
     if (checkOutBtn && !worker?.check_out) {
       fetch(apiEndPointGetAttendance, {
@@ -80,7 +85,8 @@ const useWorker = (workerIdentity, searchWorkerBtn, checkInBtn, checkOutBtn, set
             check_out_string: data.data.check_out_string,
           });
         })
-        .catch((error) => console.error("Error:", error));
+        .catch((error) => console.error("Error:", error))
+        .finally(() => setCheckOutBtn(false));
     }
   }, [checkOutBtn]);
 

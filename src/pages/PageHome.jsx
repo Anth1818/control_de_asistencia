@@ -19,12 +19,14 @@ export const PageHome = () => {
   const { setErrorCredentials } = useUser();
 
 
-  const { worker, loader, checkInSuccess, checkOutSuccess, handleSearchWorker} = useWorker(
+  const { worker, loader, checkInSuccess, checkOutSuccess, handleSearchWorker } = useWorker(
     workerIdentity,
     searchWorkerBtn,
     checkInBtn,
     checkOutBtn,
-    setSearchWorkerBtn
+    setSearchWorkerBtn,
+    setCheckInBtn,
+    setCheckOutBtn
   );
 
 
