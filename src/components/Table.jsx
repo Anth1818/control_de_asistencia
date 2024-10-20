@@ -20,9 +20,10 @@ import Button from "./Button";
 import handleExportPDF from "../utils/exportPDF.js";
 import departments from "../utils/departments";
 import useAttendance from "../hooks/useAttendance";
+import { date } from "../utils/date.js";
 
 
-export function TableAttendance({ dataInitial, title, date }) {
+export function TableAttendance({ dataInitial, title }) {
 
   const [date_start, setDate_start] = useState("");
   const [date_end, setDate_end] = useState("");
@@ -36,8 +37,8 @@ export function TableAttendance({ dataInitial, title, date }) {
   const [rowsPerPage, setRowsPerPage] = useState(25);
   const [openRows, setOpenRows] = useState({});
   const [filterId, setFilterId] = useState("");
-  const [orderBy, setOrderBy] = useState("name");
-  const [order, setOrder] = useState("asc");
+  const [orderBy] = useState("name");
+  const [order] = useState("asc");
 
   // -------Departamentos
   const [department, setDeparment] = useState(0);
